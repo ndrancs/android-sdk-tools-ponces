@@ -14,12 +14,14 @@ jobs:
         #abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
         abi: [arm64-v8a]
     env:
-      PLATFORM_VERSION: 35.0.2
-      NDK_VERSION: r26b
+      PLATFORM_VERSION: 36.1.0
+      NDK_VERSION: r29
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history and tags
 
     - name: Install dependencies
       run: |
@@ -59,7 +61,18 @@ jobs:
         cd build/${{ matrix.abi }}/bin
         zip -r ../android-sdk-tools-static-aarch64.zip * 
 
+    - name: Create Git Tag
+      run: |
+        DATE=$(date +'%Y%m%d')
+        TAG="build-$DATE-$(git rev-parse --short HEAD)"
+        echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -a "$TAG" -m "Automated build: $TAG"
+        git push origin "$TAG"
+
     - name: Upload artifacts
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: ${{ env.TAG_NAME }}
         files: build/${{ matrix.abi }}/*.zip
