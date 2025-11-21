@@ -1,9 +1,7 @@
 name: Build Android SDK Tools
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
